@@ -40,8 +40,8 @@ await web.evaluateJavaScript(`(${function () {
   window.__shLayoutInstalled = true;
   // iOS WebView: allow viewport content to use the bottom safe-area where supported.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
-  if (viewportMeta && !/viewport-fit\\s*=/.test(viewportMeta.content)) {
-    viewportMeta.content = viewportMeta.content.replace(/,?\\s*$/, '') + ', viewport-fit=cover';
+  if (viewportMeta && !/viewport-fit\s*=/.test(viewportMeta.content)) {
+    viewportMeta.content = viewportMeta.content.replace(/,?\s*$/, '') + ', viewport-fit=cover';
   }
   const css = document.createElement("style");
   css.textContent = `
