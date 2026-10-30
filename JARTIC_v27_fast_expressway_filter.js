@@ -979,7 +979,7 @@ await web.evaluateJavaScript(`(${function (apiKey) {
       const middle=progress>2000 && total-(progress+d)>1500;
       // 距離1km以上の一般道が高速ルートの途中に現れるケースだけ除外。
       // 「○○方面」や出口標識への言及は、走行区間として扱わない。
-      const surface=/(?:国道[0-9０-９]+号|都道[0-9０-９]+号|県道[0-9０-９]+号|一般道|市道)/.test(txt);
+      const surface=/(?:国道[0-9０-９]+号|都道[0-9０-９]+号|県道[0-9０-９]+号|一般道|市道)/.test(txt) && !/(?:国道(?:466|４６６)号|第三京浜)/.test(txt);
       const active=/(?:を進む|を走る|を直進|に入る|へ入る|に沿って|を通る|へ進む)/.test(txt);
       if(middle && d>=1000 && surface && active && !/(?:標識に従|の表示|方面の標識)/.test(txt)){
         blocked=true;reason='高速道路の途中に一般道の走行案内があります';
