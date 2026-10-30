@@ -715,36 +715,6 @@ await web.evaluateJavaScript(`(${function (apiKey) {
     {key:"K7NW",name:"横浜北西線",re:/横浜北西線|Yokohama Northwest Route/i},
     {key:"Y",name:"八重洲線",re:/八重洲線|Yaesu Route/i}
   ];
-  function identify(route,destKey){
-    const scores=Object.fromEntries(ROADS.map(r=>[r.key,0]));
-    const ordered=[];
-    for(const leg of route.legs||[])for(const step of leg.steps||[]){
-      const text=String(step.navigationInstruction?.instructions||'').replace(/\s+/g,'');
-      const dist=Number(step.distanceMeters)||0;
-      if(dist<250||!text)continue;
-      if(/(?:方面|行き)/.test(text)&&!/(?:に入る|へ入る|を進む|に沿って|を走行|を直進|をそのまま)/.test(text))continue;
-      if(/(?:出口|分岐)/.test(text)&&!/(?:に入る|へ入る|を進む|に沿って|を走行|を直進|をそのまま)/.test(text))continue;
-      const hits=ROADS.filter(r=>r.re.test(text));
-      if(hits.length!==1)continue;
-      scores[hits[0].key]+=Math.min(dist,25000);
-      if(!ordered.includes(hits[0].key))ordered.push(hits[0].key);
-    }
-    const present=ordered.filter(k=>scores[k]>=500);
-    let key='';
-    if(destKey==='三ツ沢線|横浜駅西口'){
-      const bay=scores.B,yok=scores.K1;
-      if(bay>=1200&&bay>=yok*1.8)key='B';
-      else if(yok>=1200&&yok>=bay*1.8)key='K1';
-    }
-    if(!key){
-      const ranked=present.slice().sort((a,b)=>scores[b]-scores[a]);
-      if(ranked.length===1&&scores[ranked[0]]>=800)key=ranked[0];
-      else if(ranked.length>1&&scores[ranked[0]]>=1200&&scores[ranked[0]]>=scores[ranked[1]]*1.6)key=ranked[0];
-    }
-    if(!key)return null;
-    const major=ROADS.find(r=>r.key===key);
-    return {label:major.name+'経由',roadKey:key,roads:present.map(k=>ROADS.find(r=>r.key===k).name).join(' → ')};
-  }
   function roadDetails(route){
     const roadSequence=[], directions=[];
     for(const leg of route.legs||[])for(const step of leg.steps||[]){
@@ -793,20 +763,12 @@ await web.evaluateJavaScript(`(${function (apiKey) {
     }
     return {blocked,reason,validated:false};
   }
-  function simplify(route,destKey){
-    const found=identify(route,destKey);
-    if(!found)return null;
-    return {duration:route.duration,staticDuration:route.staticDuration||null,
-      distanceMeters:route.distanceMeters,...found,...roadDetails(route)};
-  }
-  function chooseRoutes(routes,destKey){
+  function chooseRoutes(routes){
     const first=routes.find(r=>Number.isFinite(seconds(r.duration)));
     if(!first)return [];
-    const info=simplify(first,destKey);
-    const base=info||{duration:first.duration,staticDuration:first.staticDuration||null,
-      distanceMeters:first.distanceMeters,label:'Google推奨ルート',roadKey:'unknown',
-      roads:'',...roadDetails(first)};
-    return [{...base,label:'Google推奨ルート',
+    return [{duration:first.duration,staticDuration:first.staticDuration||null,
+      distanceMeters:first.distanceMeters,label:'Google推奨ルート',
+      roadKey:'unknown',roads:'',...roadDetails(first),
       warning:classifyHighway(first).blocked?'一般道が含まれる可能性があります':''}];
   }
   function resultView(origin,dest,data,cached){
@@ -923,7 +885,7 @@ await web.evaluateJavaScript(`(${function (apiKey) {
           'X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':FIELD_MASK},body:JSON.stringify(payload)});
       const body=await response.json().catch(()=>null);
       if(!response.ok)throw Error(body?.error?.message||'HTTP '+response.status);
-      const routes=chooseRoutes(body?.routes||[],placeId(...x.b.entry));
+      const routes=chooseRoutes(body?.routes||[]);
       if(!routes.length){errorView('経路を取得できませんでした。入口・出口の位置と方向をご確認ください。');return;}
       putCache(x.key,routes);resultView(x.origin,x.dest,routes,false);
     }catch(err){errorView('取得に失敗しました：'+String(err?.message||err));}
