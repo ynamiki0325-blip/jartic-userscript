@@ -17,6 +17,7 @@ async function getSetup(){
     url=values[0];key=values[1];
     if(!key||!/^https:\/\//i.test(url))throw Error('https:// のIC検索URLとAPIキーが必要です');
     if(!/\/ic(?:\?|$)/.test(url))throw Error('IC検索 /ic のURLを指定してください');
+    if(!/rapidapi\.com$/.test(url.split('/')[2]))throw Error('RapidAPIの/ic URLを指定してください');
     Keychain.set(K_KEY,key);Keychain.set(K_URL,url);
   }
   return {url,key};
@@ -29,8 +30,12 @@ async function icSearch(base,key,name){
   const url=icUrl(base,name);
   const req=new Request(url);req.method='GET';
   req.headers={'X-RapidAPI-Key':key,'X-RapidAPI-Host':new URL(url).hostname};
-  const data=await req.loadJSON();
-  const items=(data.items||data.result?.items||[]);
+  const raw=await req.loadString();
+  const status=req.response?.statusCode;
+  let data;try{data=JSON.parse(raw);}catch(e){throw Error('HTTP '+status+': JSON以外の応答');}
+  if(status>=400)throw Error('HTTP '+status+': '+String(data.message||data.error||'認証・契約・URLを確認').slice(0,180));
+  if(!Array.isArray(data.items))throw Error('予期しないレスポンスです。IC検索APIのURLを確認してください');
+  const items=data.items;
   return {query:name,count:items.length,candidates:items.map(x=>({id:x.id,name:x.name,road:x.road_name,entrance:x.entrance,exit:x.exit,coord:x.coord}))};
 }
 try {
