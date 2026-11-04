@@ -4,7 +4,7 @@ const web = new WebView();
 await web.loadURL("https://www.jartic.or.jp/map/?p=C01&z=8");
 // Delay is performed inside WebView, where setTimeout is available.
 let raw = await web.evaluateJavaScript(`
-(async function(){
+void (async function(){
  await new Promise(resolve => setTimeout(resolve, 3000));
  const out={version:"hodogaya-map-v2",page:location.pathname+location.search,dom:{},resources:[],simplemap:{}};
  try{
