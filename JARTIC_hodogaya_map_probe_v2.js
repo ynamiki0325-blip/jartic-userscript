@@ -2,9 +2,10 @@
 // APIキー不要。普段の首都高アプリは変更しません。
 const web = new WebView();
 await web.loadURL("https://www.jartic.or.jp/map/?p=C01&z=8");
-await new Promise(resolve => setTimeout(resolve, 4500));
+// Delay is performed inside WebView, where setTimeout is available.
 let raw = await web.evaluateJavaScript(`
 (async function(){
+ await new Promise(resolve => setTimeout(resolve, 3000));
  const out={version:"hodogaya-map-v2",page:location.pathname+location.search,dom:{},resources:[],simplemap:{}};
  try{
    const el=document.getElementById("map");
