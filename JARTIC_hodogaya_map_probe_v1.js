@@ -4,7 +4,7 @@ const URL = "https://www.jartic.or.jp/map/?p=C01&z=8";
 const web = new WebView();
 await web.loadURL(URL);
 const report = await web.evaluateJavaScript(`
-(async () => {
+(() => {
   const found = {version:"Hodogaya map diagnostic 1.0",url:location.pathname+location.search};
   const map = document.getElementById("map");
   const selectors = ["canvas","svg","img",".ol-layer",".ol-viewport"];
@@ -53,7 +53,7 @@ const report = await web.evaluateJavaScript(`
   found.note="表示中の地図構造と通信一覧だけの診断です。保土ヶ谷バイパスの渋滞が取得可能とは限りません。";
   return JSON.stringify(found);
 })()
-`,true);
+`);
 let data;
 try { data = JSON.parse(report); } catch(e) { data={error:String(e),response:String(report).slice(0,1000)}; }
 Pasteboard.copy(JSON.stringify(data,null,2));
