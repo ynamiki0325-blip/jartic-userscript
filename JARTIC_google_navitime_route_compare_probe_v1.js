@@ -1,6 +1,7 @@
 // JARTIC / NAVITIME / Google 2ルート比較 診断 v1.0
 // v37.0は変更しません。APIキーを共有・送信しないでください。
 // 2 Google Routes API requests. Charges may apply.
+await (async function(){
 const KEY_NAME="JARTIC_ROUTES_API_KEY_V13";
 let key="";
 try{if(Keychain.contains(KEY_NAME))key=Keychain.get(KEY_NAME)||"";}catch(e){}
@@ -66,3 +67,4 @@ let a=new Alert();a.title="2ルート診断 終了";
 a.message=result.results.map(x=>x.candidate+": "+(x.error?"エラー "+x.error:(x.durationMin+"分 / "+x.km+"km / 通常 "+x.staticMin+"分"))).join("\n")+"\n\n結果をクリップボードにコピーしました。APIキーは含まれません。ChatGPTに貼り付けてください。";
 a.addAction("OK");await a.present();
 Script.complete();
+})();
